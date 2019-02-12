@@ -14,13 +14,25 @@ def cluInfo(clusters,points,Ci,image,m_image,scale):
     
     Is = []
     Ib = []
+    ## to get X and Y in full dimension
+    Xn = np.zeros(len(Xi)*scale*scale,dtype=int)
+    Yn = np.zeros(len(Yi)*scale*scale,dtype=int)
     for i in range(0, len(Xi)):    # loop on single cluster value
         y0      = int(Xi[i]*scale)
         x0      = int(Yi[i]*scale)
+        factor = scale*scale
+        
+        Yn[factor*i:factor*(i+1)] = np.reshape(np.reshape(np.arange((y0),(y0+scale)).repeat(scale,axis = 0),[scale,scale]).T,factor)
+        Xn[factor*i:factor*(i+1)] = np.arange((x0),(x0+scale)).repeat(scale,axis = 0)
+        
         Is.extend(list(image[(y0):(y0+scale),(x0):(x0+scale)].reshape(scale*scale).astype(int)))
         Ib.extend(list(m_image[(y0):(y0+scale),(x0):(x0+scale)].reshape(scale*scale).astype(int)))
     
-    return Xi, Yi, Is, Ib, tag
+    Xf = list(Xn.astype(int))
+    Yf = list(Yn.astype(int))
+    del Xi,Yi,Xn,Yn
+      
+    return Xf, Yf, Is, Ib, tag
 
         
 def openTable(file):

@@ -76,9 +76,10 @@ def plot2hist(variable,bins,nsd,nse,label, density = True, logx = False, logy = 
     m=np.mean(v2[(v2 != 0) & (np.isnan(v2) == False)])
     s=np.std(v2[(v2 != 0) & (np.isnan(v2) == False)])
     
-    plt.hist(variable[0], bins=bins, range=(m-nsd*s, m+nse*s), fc='r', alpha = 0.7, density=density)
-    plt.hist(variable[1], bins=bins, range=(m-nsd*s, m+nse*s), fc='b', alpha = 0.7, density=density)
-    plt.hist(variable[2], bins=bins, range=(m-nsd*s, m+nse*s), fc='darkorange', alpha = 0.7, density=density)
+    plt.hist(variable[0], bins=bins, fc='r', alpha = 0.7, density=density)
+    plt.hist(variable[1], bins=bins, fc='b', alpha = 0.7, density=density)
+    plt.hist(variable[2], bins=bins, fc='darkorange', alpha = 0.7, density=density)
+    plt.xlim([m-nsd*s, m+nse*s])
     
     if logx:
         plt.xscale("log")
@@ -111,3 +112,57 @@ def plotMesh(X,Y,Z,el,graus):
     ax.view_init(elev=el, azim=graus)
     plt.show()
     return ax
+
+#### Tools to rotate the cluster
+
+def rotate(oX, oY, pX, pY, angle):
+    from math import sin
+    from math import cos
+    from numpy import array
+    """
+    Rotate a point counterclockwise by a given angle around a given origin.
+
+    The angle should be given in radians.
+    """
+    ox = oX
+    oy = oY
+    px = array(pX)
+    py = array(pY)
+
+    qx = ox + cos(angle) * (px - ox) - sin(angle) * (py - oy)
+    qy = oy + sin(angle) * (px - ox) + cos(angle) * (py - oy)
+    
+    return qx.tolist(), qy.tolist()
+
+def getAngle(X,Y):
+    from numpy import polyfit
+    from numpy import poly1d
+    from numpy import arctan
+    
+    # - - - - Reta 0,0
+    xo = [-2048,2048]
+    yo = [0.001,0.001]
+    
+    zo = polyfit(yo,xo, 1)
+    fo = poly1d(zo)    
+    m1 = fo.c[0] 
+    
+    z = polyfit(X,Y, 1)
+    func = poly1d(z) 
+    m2 = func.c[0]
+    
+    
+    
+    angle = arctan(m1-m2/(1-m1*m2))
+    
+    return angle
+
+def getC(X,Y):
+    from numpy import polyfit
+    from numpy import poly1d
+    from numpy import arctan
+    
+    z = polyfit(X,Y, 1)
+    func = poly1d(z)    
+    
+    return func.c[0]

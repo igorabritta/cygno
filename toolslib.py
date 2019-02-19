@@ -54,32 +54,59 @@ def colorbar(mappable):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     return fig.colorbar(mappable, cax=cax)
 
-def plot2hist(variable,bins,nsd,nse,label, density = True, logx = False, logy = False):
+def plot2hist(vari, bins = [20,40,100], liml = 0,limr = 50, label = '', scale = '', unity = '', density = True, logx = False, logy = False):
     ## Function to show in the same histogram the three categories
     
-    # variable = is a 3xN List which row has the information of one category       - List
+    # vari     = is a 3xN List which row has the information of one category       - List
     # nins     = is the number of bins to construct the histogram                  - int
-    # nsd      = is the multiplication factor of the sigma to define the Xlim min  - float
-    # nse      = is the multiplication factor of the sigma to define the Xlim max  - float
+    # liml     = Xlim min                                                          - float
+    # limr     = Xlim max                                                          - float
     # label    = is the Xlabel to show in the plot                                 - string
+    # scale    = is 'm' - mili, 'u' - micro, 'n' - nano,..                         - char
+    # unity    = is the metric unit                                                - char
     # density  = is the flag to set the histogram to show the density or not       - Boolean
     # logx     = is the flag to set the X axis to log on the histogram or not      - Boolean
     # logy     = is the flag to set the Y axis to log on the histogram or not      - Boolean
     
     import matplotlib.pyplot as plt
+    v = vari.copy()
+    
+    if scale == 'k':
+        for i in range(0,3):
+            v[i] = v[i]/(10**3)
+    elif scale == 'M':
+        for i in range(0,3):
+            v[i] = v[i]/(10**6)
+    elif scale == 'G':
+        for i in range(0,3):
+            v[i] = v[i]/(10**9)
+    elif scale == 'T':
+        for i in range(0,3):
+            v[i] = v[i]/(10**12)
+    elif scale == 'm':
+        for i in range(0,3):
+            v[i] = v[i]*(10**3)
+    elif scale == 'u':
+        for i in range(0,3):
+            v[i] = v[i]*(10**6)
+    elif scale == 'n':
+        for i in range(0,3):
+            v[i] = v[i]*(10**9)
+    elif scale == 'p':
+        for i in range(0,3):
+            v[i] = v[i]*(10**12)
+    else:
+        for i in range(0,3):
+            v[i] = v[i]
+    
+    
     fig = plt.figure(figsize=(10,7))
     ax = fig.add_subplot(111)
     
-    v1 = np.append(variable[0],variable[1])
-    v2 = np.append(v1,variable[2])
-    
-    m=np.mean(v2[(v2 != 0) & (np.isnan(v2) == False)])
-    s=np.std(v2[(v2 != 0) & (np.isnan(v2) == False)])
-    
-    plt.hist(variable[0], bins=bins, fc='r', alpha = 0.7, density=density)
-    plt.hist(variable[1], bins=bins, fc='b', alpha = 0.7, density=density)
-    plt.hist(variable[2], bins=bins, fc='darkorange', alpha = 0.7, density=density)
-    plt.xlim([m-nsd*s, m+nse*s])
+    plt.hist(v[0], bins=bins[0], fc='r', alpha = 0.7, density=density)
+    plt.hist(v[1], bins=bins[1], fc='b', alpha = 0.7, density=density)
+    plt.hist(v[2], bins=bins[2], fc='darkorange', alpha = 0.7, density=density)
+    plt.xlim([liml, limr])
     
     if logx:
         plt.xscale("log")
@@ -89,9 +116,10 @@ def plot2hist(variable,bins,nsd,nse,label, density = True, logx = False, logy = 
         plt.ylabel('Probability')
     else:
         plt.ylabel('Counts')
-    plt.xlabel(label,fontsize=18)
+    plt.xlabel(label + '(' + scale + unity + ')',fontsize=18)
     plt.legend(['Recoils', 'Soft Electrons', 'MeV Electrons'],prop={'size': 18})
     plt.show()
+    plt.close
     
 def getTaggedVariable(vari,col):
     ## Function get the three categories on the same variable
@@ -166,3 +194,89 @@ def getC(X,Y):
     func = poly1d(z)    
     
     return func.c[0]
+
+def get_sliceleng(X,Y,pieces):
+    # Function to get the mean length of the cluster
+    # in X or Y direction.
+    pieces = pieces
+    
+    newX = np.array(X) # Direction of the slices
+    newY = np.array(Y) # Direction of the Mean Length
+    
+    slices = np.linspace(np.min(newX),np.max(newX),pieces)
+    meanLY = np.zeros([(pieces-1),],dtype=float)
+
+    for i in range(0,(pieces-1)):
+    
+        y = newY[(newX > slices[i]) & (newX < slices[i+1])]
+        meanLY[i] = np.max(y) - np.min(y)
+    return meanLY
+
+def plot1hist(variable, bins, liml = 0, limr = 50, label = '', density = True, logx = False, logy = False):
+    ## Function to show one variable on a histogram
+    
+    # variable = is a 1xN List with the variable information                       - List
+    # nins     = is the number of bins to construct the histogram                  - int
+    # nsd      = is the multiplication factor of the sigma to define the Xlim min  - float
+    # nse      = is the multiplication factor of the sigma to define the Xlim max  - float
+    # label    = is the Xlabel to show in the plot                                 - string
+    # density  = is the flag to set the histogram to show the density or not       - Boolean
+    # logx     = is the flag to set the X axis to log on the histogram or not      - Boolean
+    # logy     = is the flag to set the Y axis to log on the histogram or not      - Boolean
+    
+    import matplotlib.pyplot as plt
+    fig = plt.figure(figsize=(10,7))
+    ax  = fig.add_subplot(111)
+    
+    v2  = variable
+    e   = np.size(v2)
+    m   = np.mean(v2[(v2 != 0) & (np.isnan(v2) == False)])
+    s   = np.std(v2[(v2 != 0) & (np.isnan(v2) == False)])
+    
+    plt.hist(variable, bins=bins, fc='r', alpha = 0.7, density=density)
+    plt.xlim([liml, limr])
+    
+    if logx:
+        plt.xscale("log")
+    if logy:
+        plt.yscale("log")
+    if density:
+        plt.ylabel('Probability')
+    else:
+        plt.ylabel('Counts')
+    plt.xlabel(label,fontsize=18)
+    #plt.legend(['Recoils', 'Soft Electrons', 'MeV Electrons'],prop={'size': 18})
+
+    textstr = '\n'.join((
+        r'Entries $=%d$' % (e, ),
+        r'Mean $=%.2f$' % (m, ),
+        r'Std Dev$ =%.2f$' % (s, )))
+
+    # these are matplotlib.patch.Patch properties
+    props = dict(boxstyle='square', facecolor='white', alpha=0.5)
+
+    # place a text box in upper left in axes coords
+    plt.text(0.7, 0.9, textstr, fontsize=14,
+            verticalalignment='top',transform=ax.transAxes, bbox=props)
+    
+    plt.show()
+
+def pl3d(X,Y,Z,azim=0, bottom = 80):
+
+    from mpl_toolkits.mplot3d import Axes3D
+    import matplotlib.pyplot as plt
+
+
+
+    fig = plt.figure(figsize=(10,7))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.scatter(X, Y, Z, c='r', marker='o')
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.set_zlim(bottom = bottom)
+    ax.view_init(elev=0., azim=azim)
+
+    plt.show()

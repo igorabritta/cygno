@@ -6,7 +6,7 @@ iDBSCAN: Iterative Density-Based Spatial Clustering of Applications with Noise
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-def idbscan(X, iterative = 3):
+def idbscan(X, iterative = 4):
     """
     Returns
     -------

@@ -65,8 +65,8 @@ def idbscan(X, iterative = 4):
 
         clusters = [Xnew[labels == i] for i in range(n_clusters_)]
 
-        lenClu = np.zeros(np.size(clusters),)
-        for i in range(0,np.size(clusters)):
+        lenClu = np.zeros(n_clusters_,)
+        for i in range(0,n_clusters_):
             lenClu[i] = np.size(clusters[i])
         clusterI = (np.where(lenClu > 900))[0]
 
@@ -91,8 +91,8 @@ def idbscan(X, iterative = 4):
 
         clusters = [Xnew2[labels == i] for i in range(n_clusters_)]
 
-        lenClu = np.zeros(np.size(clusters),)
-        for i in range(0,np.size(clusters)):
+        lenClu = np.zeros(n_clusters_,)
+        for i in range(0,n_clusters_):
             lenClu[i] = np.size(clusters[i])
         clusterI = (np.where(lenClu > 150))[0]
 
@@ -120,7 +120,7 @@ def idbscan(X, iterative = 4):
         
         if iterative == 3 or iterative == 4: # To salve ONLY the Small Clusters or 4 to all
             ## ----- Salve the clusters and labels
-            for j in range(0,np.size(clusters)):
+            for j in range(0,n_clusters_):
                 auxClu+=1
                 indice = Index[indicenew[indicenew2[indicenew3[labels == j]]]]
                 Fcluster[indice] = auxClu

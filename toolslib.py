@@ -268,15 +268,234 @@ def pl3d(X,Y,Z,azim=0, bottom = 80):
 
 
 
-    fig = plt.figure(figsize=(10,7))
-    ax = fig.add_subplot(111, projection='3d')
+    fig = plt.figure(figsize = (10,7))
+    ax  = fig.add_subplot(111, projection='3d')
 
-    ax.scatter(X, Y, Z, c='r', marker='o')
+    ax.scatter(X, Y, Z, c = 'r', marker = 'o')
 
     ax.set_xlabel('X')
     ax.set_ylabel('Y')
     ax.set_zlabel('Z')
     ax.set_zlim(bottom = bottom)
-    ax.view_init(elev=0., azim=azim)
+    ax.view_init(elev = 0., azim = azim)
 
     plt.show()
+    
+    
+def plotLineCluster(ax,sx,ex,sxy,exy):
+    import matplotlib.pyplot as plt
+    
+    #fig = plt.figure(figsize=(7,7))
+    ax.plot([sx, ex], [sxy, exy], 'b-')
+    ax.plot(ex, exy, 'rs')
+    ax.plot(sx, sxy, 'k<')
+    
+    circle1=plt.Circle((895,920),900,color='r',fill=False)
+    plt.gcf().gca().add_artist(circle1)
+    
+    ax.set_xlabel('X axis')
+    ax.set_ylabel('Y axis')
+    ax.set_xlim([-50,2078])
+    ax.set_ylim([-50,2078])
+    plt.gca().set_aspect('equal', adjustable='box')
+    #plt.axis('square')
+    
+    ax.legend(['Line','Start Point', 'End Point'])
+    
+def getSignalCircle(featuresL, zX = 895, zY = 920, r = 900, mr = 20, gr = 10, flag = False):
+    
+    ind   = np.array(featuresL.index[featuresL.Image < 210])
+    ex    = np.array(featuresL.EndX[featuresL.Image < 210])
+    exy   = np.array(featuresL.EndXy[featuresL.Image < 210])
+    
+    teste = np.sqrt((ex-zX)**2 + (exy-zY)**2)
+    indn  = np.where((teste > (r-mr)) & (teste < (r+gr)))
+    if flag:
+        return ind[indn],indn[0]
+    else:
+        return ind[indn]
+
+def getSignalEndInCircle(featuresL, zX = 895, zY = 920, r = 900, gr = 10):
+    
+    ind   = np.array(featuresL.index[featuresL.Image < 210])
+    ex    = np.array(featuresL.StartX[featuresL.Image < 210])
+    exy   = np.array(featuresL.StartXy[featuresL.Image < 210])
+    
+    teste = np.sqrt((ex-zX)**2 + (exy-zY)**2)
+    indin  = np.where(teste < (r-gr))
+    indout  = np.where(teste >= (r-gr))
+    
+    return ind[indin],ind[indout]
+
+def plot_shapeprofile(X,Y,L,P = 0, px = 10, debug = False, bp = False):
+    from scipy import stats
+    from scipy.optimize import curve_fit
+    from astropy.modeling.models import Gaussian1D
+    import matplotlib.pyplot as plt
+
+    
+    L    = np.array(L) - np.array(P)
+    newX = np.array(X) # Direction of the slices
+    newY = np.array(Y) # Direction of the Mean Length
+
+    pieces = np.int(np.round((np.max(newX)-np.min(newX))/px))
+    slices = np.linspace(np.min(newX),np.max(newX),pieces)
+    piecesY = np.int(np.round(np.max(newY))-np.round(np.min(newY)))
+    
+    xm = np.zeros([pieces-1,],dtype=float)
+    zm = np.zeros([pieces-1,],dtype=float)
+    zs = np.zeros([pieces-1,],dtype=float)
+    zM = np.zeros([pieces-1,],dtype=float)
+    
+    matrixY = np.zeros([pieces-1,piecesY+1],dtype=float)
+    ct = np.zeros([piecesY+1],dtype=float)
+    
+    if debug:
+        fig, ax = plt.subplots(1,2,figsize=(18, 6))
+    
+    for i in range(0,(pieces-1)):
+
+        y = newY[(newX > slices[i]) & (newX < slices[i+1])]
+        #x = newX[(newX > slices[i]) & (newX < slices[i+1])]
+        z = L[(newX > slices[i]) & (newX < slices[i+1])]
+        
+        xm[i] = (slices[i] + slices[i+1])/2
+        
+        if debug:
+            iy, uy = get_shapeprofile(axi = y,light = z,fig = fig, ax = ax, debug = debug)
+        else:
+            iy, uy = get_shapeprofile(axi = y,light = z,fig = None, ax = None, debug = debug)
+        
+        ii = uy-np.round(np.min(newY))
+        
+        matrixY[i,ii.astype(int)] = iy
+        
+        zm[i] = np.mean(iy)
+        zs[i] = np.sum(iy)
+        zM[i] = np.max(iy)
+        
+    
+    
+    if debug:
+        fig1, ax1 = plt.subplots(2,2,figsize = (18, 18))
+        ax1[1,1].plot(xm,zs,'x:')
+        ax1[1,1].set_title("Sum of X Profile")
+        ax1[0,1].plot(xm,zm,'o:')
+        ax1[0,1].set_title("Mean of X Profile")
+        ax1[1,0].plot(xm,zM,'s:')
+        ax1[1,0].set_title("Max of X Profile")
+    
+    
+    for jj in range(0,piecesY+1):
+        aux = matrixY[:,jj]
+        ct[jj] = np.size(aux[aux != 0])
+    
+    # - - - - - - - - - - - - - - - - - - - - -
+    Yproj = np.mean(matrixY,axis = 0)
+    errY = np.std(matrixY,axis = 0)/np.sqrt(ct)
+    xy    = np.arange(0,piecesY+1)+np.min(newY)
+
+    # weighted arithmetic mean (corrected - check the section below)
+    mean  = sum(xy * Yproj) / sum(Yproj)
+    sigma = np.sqrt(sum(Yproj * (xy - mean)**2) / sum(Yproj))
+    sig   = np.std(Yproj)    
+    
+    def Gauss(x, a, x0, sigma):
+        return a * np.exp(-(x - x0)**2 / (2 * sigma**2))
+    
+    if debug:
+        ax1[0,0].errorbar(xy, Yproj, yerr = errY, fmt = 'b+:', label='data')
+    try:
+        popt,pcov = curve_fit(Gauss, xy, Yproj, p0 = [max(Yproj), mean, sigma])
+        if debug:
+            ax1[0,0].plot(xy, Gauss(xy, *popt), 'r-',
+               label='Gauss fit   \nAmpl     = %.1f\nMean    = %.1f\nSigma   = %.1f' %
+               (popt[0], popt[1], popt[2]))
+        g1     = Gaussian1D(np.max(Gauss(xy, *popt)), mean = popt[1], stddev = popt[2])
+        #width  = popt[2]*sg
+    except:
+        print ("fit error")
+    if debug:
+        ax1[0,0].plot(np.linspace(popt[1]-(g1.fwhm/2),popt[1]+(g1.fwhm/2),10),
+                      np.ones(10,dtype='float')*(g1.amplitude/2),
+                      '-k',label = 'FWHM    = %.1f' % (g1.fwhm))
+        ax1[0,0].set_xlabel('Y [pixel]')
+        ax1[0,0].set_ylabel('average light profile [ph]')
+        ax1[0,0].minorticks_on()
+        ax1[0,0].legend()
+        plt.show()
+        fig1.hold
+    
+        
+    ###### X information ############
+    widthY = popt[2]
+    widthX = np.max(xm)-np.min(xm)
+    peakX  = np.max(zs)
+    meanX  = np.mean(zs)
+    if bp:
+        return xm,zs
+    else:
+        return widthY, widthX, peakX, meanX
+
+
+def get_shapeprofile(axi, light, fig, ax, debug = False):
+    from scipy import stats
+    import matplotlib.pyplot as plt
+    
+    uy = np.unique(np.round(axi))
+    iy = np.zeros([np.size(uy),], dtype = float)
+    my = np.zeros([np.size(uy),], dtype = float)
+
+    for jj in range(0,np.size(uy)):
+        ind = np.where(np.round(axi) == uy[jj])
+        iy[jj]  = np.sum(light[ind])
+        my[jj]  = stats.mode(light[ind])[0]
+
+    if debug:
+        #fig, ax = plt.subplots(1,2,figsize=(18, 6))
+        ax[0].plot(uy,iy,'-x')
+        ax[0].set_title("Sum of Y Profile")
+        ax[1].plot(uy,my,'o')
+        ax[1].set_title("Mode of Y Profile")
+        fig.hold
+    return iy,uy.astype(int)
+
+def plottingCluster(df,colhead,cluN,x_resolution,y_resolution):
+    import matplotlib.pyplot as plt
+    from toolslib import colorbar
+    
+    index = df.index[cluN]
+    Run   = df[colhead[0]][cluN]
+    Nim   = df[colhead[1]][cluN]
+    Xi    = df[colhead[3]][cluN]
+    Yi    = df[colhead[4]][cluN]
+    Lp    = df[colhead[5]][cluN]
+    Lb    = df[colhead[6]][cluN]
+
+    matrix = np.zeros([y_resolution,x_resolution],dtype=int)
+    matrixb = np.zeros([y_resolution,x_resolution],dtype=int)
+    
+    matrix[Yi,Xi]=Lp
+    matrixb[Yi,Xi]=Lb
+    
+    fig = plt.figure(figsize=(15,15))
+    ax  = plt.gca()
+    
+    iax = ax.imshow(matrix,cmap="viridis", vmin=85,vmax=130)
+    ax.set_ylim(np.min(Yi),np.max(Yi))
+    ax.set_xlim(np.min(Xi),np.max(Xi))
+    ax.set_title('%d - Run %d - # of Image %d' % (index, Run, Nim))
+    colorbar(iax)
+    plt.show(block=False)
+    plt.close
+    
+def xstart(x):
+    import numpy as np
+    yo = np.concatenate([np.linspace(200,300,100), np.linspace(450,550,20), 
+                         np.linspace(600,800,30), np.linspace(900,1100,10), np.linspace(1200,1700,5)])
+    xo = np.linspace(350,0,np.size(yo))
+    
+    zo = np.polyfit(yo,xo, 7)
+    fo = np.poly1d(zo)
+    
+    return fo(x)

@@ -327,11 +327,12 @@ def getSignalEndInCircle(featuresL, zX = 895, zY = 920, r = 900, gr = 10):
     
     return ind[indin],ind[indout]
 
-def plot_shapeprofile(X,Y,L,P = 0, px = 10, debug = False, bp = False):
+def plot_shapeprofile(X,Y,L,P = 0, px = 10, p = 60, debug = False, bp = False):
     from scipy import stats
     from scipy.optimize import curve_fit
     from astropy.modeling.models import Gaussian1D
     import matplotlib.pyplot as plt
+    from toolslib import get_shapeprofile
 
     
     L    = np.array(L) - np.array(P)
@@ -370,11 +371,15 @@ def plot_shapeprofile(X,Y,L,P = 0, px = 10, debug = False, bp = False):
         
         matrixY[i,ii.astype(int)] = iy
         
-        zm[i] = np.mean(iy)
-        zs[i] = np.sum(iy)
-        zM[i] = np.max(iy)
+        ###
+        perc = (1-(p/100))/2
+        mm = uy[-1]-uy[0]
+        idp = np.where((uy >= uy[0]+(mm*(perc))) & (uy <= uy[0]+(mm*(1-perc))))
+        ###
         
-    
+        zm[i] = np.mean(iy)
+        zM[i] = np.max(iy)
+        zs[i] = np.sum(iy[idp])
     
     if debug:
         fig1, ax1 = plt.subplots(2,2,figsize = (18, 18))
@@ -490,12 +495,10 @@ def plottingCluster(df,colhead,cluN,x_resolution,y_resolution):
     plt.close
     
 def xstart(x):
-    import numpy as np
     yo = np.concatenate([np.linspace(200,300,100), np.linspace(450,550,20), 
-                         np.linspace(600,800,30), np.linspace(900,1100,10), np.linspace(1200,1700,5)])
+                         np.linspace(600,800,30), np.linspace(800,1000,10), np.linspace(1000,1300,5)])
     xo = np.linspace(350,0,np.size(yo))
     
-    zo = np.polyfit(yo,xo, 7)
+    zo = np.polyfit(yo,xo, 6)
     fo = np.poly1d(zo)
-    
     return fo(x)

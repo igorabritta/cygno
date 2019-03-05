@@ -374,7 +374,7 @@ def plot_shapeprofile(X,Y,L,P = 0, px = 10, p = 60, debug = False, bp = False):
         ###
         perc = (1-(p/100))/2
         mm = uy[-1]-uy[0]
-        idp = np.where((uy >= uy[0]+(mm*(perc))) & (uy <= uy[0]+(mm*(1-perc))))
+        idp = np.where((uy >= uy[0]+(mm*(perc))) & (uy <= uy[-1]-(mm*(perc))))
         ###
         
         zm[i] = np.mean(iy)
@@ -495,9 +495,8 @@ def plottingCluster(df,colhead,cluN,x_resolution,y_resolution):
     plt.close
     
 def xstart(x):
-    yo = np.concatenate([np.linspace(200,300,100), np.linspace(450,550,20), 
-                         np.linspace(600,800,30), np.linspace(800,1000,10), np.linspace(1000,1300,5)])
-    xo = np.linspace(350,0,np.size(yo))
+    yo = np.concatenate([np.linspace(200,300,80), np.linspace(450,550,30), np.linspace(600,800,25), np.linspace(800,1100,15)])
+    xo = np.linspace(330,0,np.size(yo))
     
     zo = np.polyfit(yo,xo, 6)
     fo = np.poly1d(zo)

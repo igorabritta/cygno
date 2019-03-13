@@ -6,8 +6,33 @@ iDBSCAN: Iterative Density-Based Spatial Clustering of Applications with Noise
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-def idbscan(X, iterative = 4):
+def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2]):
     """
+    Parameters
+    ----------
+    
+    X : array or sparse (CSR) matrix of shape (n_samples, n_features), or \
+                array of shape (n_samples, n_samples)
+            A feature array, or array of distances between samples if
+            ``metric='precomputed'``.
+            
+    iterative : int, optional
+        How many time the DBSCAN will run.
+        0 - to run naive DBSCAN using the first parameter on eps and min_samples array
+        1 - to look for and save only the 'long' tracks
+        2 - to look for and save only the 'medium' tracks
+        3 - to look for and save only the 'small' tracks
+        4 - to look for and save all the three types
+        12 - to look for and save the 'long' and the 'medium' tracks
+    
+    vector_eps : float array(1x4), optional
+        The maximum distance between two samples for them to be considered
+        as in the same neighborhood.
+        
+    vector_min_samples : int array (1x4), optional
+        The number of samples (or total weight) in a neighborhood for a point
+        to be considered as a core point. This includes the point itself.
+    
     Returns
     -------
     core_samples : array [n_core_samples]
@@ -30,8 +55,8 @@ def idbscan(X, iterative = 4):
     Flabel[:]          = 'n'
     auxClu             = -1
     # - - - - - -
-    vector_eps         = [2.26, 3.5, 2.8, 6]
-    vector_min_samples = [2, 30, 6, 2]
+    #vector_eps         = [2.26, 3.5, 2.8, 6]
+    #vector_min_samples = [2, 30, 6, 2]
     auxIti             = - 1
     ## - - - - -
 
@@ -132,7 +157,7 @@ def idbscan(X, iterative = 4):
 
 class iDBSCAN:
     
-    def __init__(self, iterative = 3):
+    def __init__(self, iterative = 4):
         self.iterative = iterative
 
     def fit(self, X):

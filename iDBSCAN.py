@@ -157,8 +157,10 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
 
 class iDBSCAN:
     
-    def __init__(self, iterative = 4):
+    def __init__(self, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2]):
         self.iterative = iterative
+        self.vector_eps = vector_eps
+        self.vector_min_samples = vector_min_samples
 
     def fit(self, X):
         

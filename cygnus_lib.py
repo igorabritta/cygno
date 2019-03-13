@@ -330,10 +330,10 @@ def DBSClustering(points, eps, min_cluster_size):
     return sorted_C
 
 
-def IDBSClustering(points, iterative):
+def IDBSClustering(points, iterative, vector_eps, vector_min_samples):
     from iDBSCAN import iDBSCAN
 
-    clusterer = iDBSCAN(iterative=iterative)
+    clusterer = iDBSCAN(iterative = iterative, vector_eps = vector_eps, vector_min_samples = vector_min_samples)
     clusterer.fit(points)
     labels = clusterer.labels_
     # print('labels: ', labels, type(labels), labels.size, labels.shape, labels.shape[0])
@@ -348,14 +348,14 @@ def IDBSClustering(points, iterative):
     sorted_C = np.array(sorted(output, key=lambda x:x[0]))
     return sorted_C
 
-def clusteringWithMethod(points, min_cluster_size, eps, iterative, Cmethod):
+def clusteringWithMethod(points, min_cluster_size, eps, iterative, vector_eps, vector_min_samples, Cmethod):
     thC = 2         # minimum distanca between points in a cluster (rebinne image)
     if Cmethod == 'hdbs': # nccs
         C = HDBSClustering(points, min_cluster_size)
     elif Cmethod == 'dbsc':
         C = DBSClustering(points, eps, min_cluster_size)
     elif Cmethod == 'idbsc':
-        C = IDBSClustering(points, iterative)
+        C = IDBSClustering(points, iterative, vector_eps, vector_min_samples)
     elif Cmethod == 'nccs':
         C = NNClustering(points, thC)
     else:

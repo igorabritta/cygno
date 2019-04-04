@@ -6,7 +6,7 @@ iDBSCAN: Iterative Density-Based Spatial Clustering of Applications with Noise
 import numpy as np
 from sklearn.cluster import DBSCAN
 
-def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2], cuts = [900, 150]):
+def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2], cuts = [900, 150], flag_noise = True):
     """
     Parameters
     ----------
@@ -37,6 +37,10 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
         The min number of sampels that the clusters need to be considerer 
         'long', 'medium' or 'small'.
     
+    flag_noise : Boolean
+        If it is TRUE the noise removing loop is done, when it is FALSE 
+        no noise removing is made.
+    
     Returns
     -------
     core_samples : array [n_core_samples]
@@ -63,8 +67,9 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
     #vector_min_samples = [2, 30, 6, 2]
     auxIti             = - 1
     ## - - - - -
-
-    if iterative >= 0:
+    indgood = np.ones(np.shape(X)[0],dtype=bool)
+    
+    if (iterative >= 0) & (flag_noise == True) :
 
         auxIti += 1
         db      = DBSCAN(eps=vector_eps[auxIti], min_samples=vector_min_samples[auxIti]).fit(X)
@@ -79,6 +84,8 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
             ## ----- Salve the clusters and labels
             Fcluster        = labels
             Flabel[indgood] = 's' # 'n' = noise points
+    else:
+        auxIti += 1
 
     if iterative >= 1:
 
@@ -161,15 +168,16 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
 
 class iDBSCAN:
     
-    def __init__(self, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2], cuts = [900, 150]):
+    def __init__(self, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_samples = [2, 30, 6, 2], cuts = [900, 150], flag_noise = True):
         self.iterative = iterative
         self.vector_eps = vector_eps
         self.vector_min_samples = vector_min_samples
         self.cuts = cuts
+        self.flag_noise = flag_noise
 
     def fit(self, X):
         
-        clust = idbscan(X, self.iterative, self.vector_eps, self.vector_min_samples, self.cuts)
+        clust = idbscan(X, self.iterative, self.vector_eps, self.vector_min_samples, self.cuts, self.flag_noise)
         self.labels_, self.core_sample_indices_, self.tag_  = clust
         
         return self

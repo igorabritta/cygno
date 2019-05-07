@@ -487,7 +487,7 @@ def plottingCluster(df,colhead,cluN,x_resolution,y_resolution):
     ax  = plt.gca()
     
     iax = ax.imshow(matrix,cmap="viridis", vmin=85,vmax=130)
-    ax.set_ylim(np.min(Yi),np.max(Yi))
+    ax.set_ylim(np.max(Yi),np.min(Yi))
     ax.set_xlim(np.min(Xi),np.max(Xi))
     ax.set_title('%d - Run %d - # of Image %d' % (index, Run, Nim))
     colorbar(iax)

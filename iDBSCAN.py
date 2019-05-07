@@ -118,49 +118,51 @@ def idbscan(X, iterative = 4, vector_eps = [2.26, 3.5, 2.8, 6], vector_min_sampl
 
         indgood2 = ~np.in1d(db.labels_, clusterI)
         Xnew2 = Xnew[indgood2,:]
-        indicenew2 = np.where(indgood2 == True)[0]
+        if np.size(Xnew2) > 1:
+            indicenew2 = np.where(indgood2 == True)[0]
 
-        auxIti+=1
-        db = DBSCAN(eps=vector_eps[auxIti], min_samples=vector_min_samples[auxIti]).fit(Xnew2)
-        labels = db.labels_
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            auxIti+=1
+            db = DBSCAN(eps=vector_eps[auxIti], min_samples=vector_min_samples[auxIti]).fit(Xnew2)
+            labels = db.labels_
+            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
-        clusters = [Xnew2[labels == i] for i in range(n_clusters_)]
+            clusters = [Xnew2[labels == i] for i in range(n_clusters_)]
 
-        lenClu = np.zeros(n_clusters_,)
-        for i in range(0,n_clusters_):
-            lenClu[i] = np.size(clusters[i])
-        clusterI = (np.where(lenClu > cuts[1]))[0]
+            lenClu = np.zeros(n_clusters_,)
+            for i in range(0,n_clusters_):
+                lenClu[i] = np.size(clusters[i])
+            clusterI = (np.where(lenClu > cuts[1]))[0]
 
-        if iterative == 2 or iterative == 4 or iterative == 12: # To salve ONLY the Medium Clusters or 4 to all
-            ## ----- Salve the clusters and labels
-            for i in clusterI:
-                auxClu+=1
-                indice = Index[indicenew[indicenew2[labels == i]]]
-                Fcluster[indice] = auxClu
-                Flabel[indice] = 'm' # 'c' = Curly tracks
+            if iterative == 2 or iterative == 4 or iterative == 12: # To salve ONLY the Medium Clusters or 4 to all
+                ## ----- Salve the clusters and labels
+                for i in clusterI:
+                    auxClu+=1
+                    indice = Index[indicenew[indicenew2[labels == i]]]
+                    Fcluster[indice] = auxClu
+                    Flabel[indice] = 'm' # 'c' = Curly tracks
 
 
     if iterative >= 3:
 
         indgood3 = ~np.in1d(db.labels_, clusterI)
-        Xnew3 = Xnew2[indgood3,:]        
-        indicenew3 = np.where(indgood3 == True)[0]
+        Xnew3 = Xnew2[indgood3,:]
+        if np.size(Xnew3) > 1:
+            indicenew3 = np.where(indgood3 == True)[0]
 
-        auxIti+=1
-        db = DBSCAN(eps=vector_eps[auxIti], min_samples=vector_min_samples[auxIti]).fit(Xnew3)
-        labels = db.labels_
-        n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
+            auxIti+=1
+            db = DBSCAN(eps=vector_eps[auxIti], min_samples=vector_min_samples[auxIti]).fit(Xnew3)
+            labels = db.labels_
+            n_clusters_ = len(set(labels)) - (1 if -1 in labels else 0)
 
-        clusters = [Xnew3[labels == i] for i in range(n_clusters_)]
-        
-        if iterative == 3 or iterative == 4: # To salve ONLY the Small Clusters or 4 to all
-            ## ----- Salve the clusters and labels
-            for j in range(0,n_clusters_):
-                auxClu+=1
-                indice = Index[indicenew[indicenew2[indicenew3[labels == j]]]]
-                Fcluster[indice] = auxClu
-                Flabel[indice] = 's' # 'c' = others tracks
+            clusters = [Xnew3[labels == i] for i in range(n_clusters_)]
+
+            if iterative == 3 or iterative == 4: # To salve ONLY the Small Clusters or 4 to all
+                ## ----- Salve the clusters and labels
+                for j in range(0,n_clusters_):
+                    auxClu+=1
+                    indice = Index[indicenew[indicenew2[indicenew3[labels == j]]]]
+                    Fcluster[indice] = auxClu
+                    Flabel[indice] = 's' # 'c' = others tracks
 
 
     return Fcluster, np.where(Fcluster != -1)[0], Flabel

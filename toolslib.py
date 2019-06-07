@@ -54,7 +54,7 @@ def colorbar(mappable):
     cax = divider.append_axes("right", size="5%", pad=0.05)
     return fig.colorbar(mappable, cax=cax)
 
-def plot2hist(vari, bins = [20,40,100], liml = 0,limr = 50, label = '', scale = '', unity = '', density = True, logx = False, logy = False):
+def plot2hist(vari, bins = [20,40,100], liml = 0,limr = 50, label = '', scale = '', unity = '', leg = ['Recoils', 'Soft Electrons', 'MeV Electrons'], density = True, logx = False, logy = False):
     ## Function to show in the same histogram the three categories
     
     # vari     = is a 3xN List which row has the information of one category       - List
@@ -117,7 +117,7 @@ def plot2hist(vari, bins = [20,40,100], liml = 0,limr = 50, label = '', scale = 
     else:
         plt.ylabel('Counts')
     plt.xlabel(label + '(' + scale + unity + ')',fontsize=18)
-    plt.legend(['Recoils', 'Soft Electrons', 'MeV Electrons'],prop={'size': 18})
+    plt.legend(leg,prop={'size': 18})
     plt.show()
     plt.close
     
@@ -178,8 +178,6 @@ def getAngle(X,Y):
     z = polyfit(X,Y, 1)
     func = poly1d(z) 
     m2 = func.c[0]
-    
-    
     
     angle = arctan(m1-m2/(1-m1*m2))
     
